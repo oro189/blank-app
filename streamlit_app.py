@@ -1,33 +1,45 @@
 import streamlit as st
 import pandas as pd
-import random
+import requests
 import time
 from datetime import datetime
 
-# Dummy symbols and auction prices
-symbols = ["NVDA.NQ", "FXI.AM", "INTC.NQ", "BAC.NY", "TLT.NQ", "VALE.NY", "AVGO.NQ", "MCHP.NQ", "SLB.NY", "SPY.AM"]
-sources = ["NSDQ", "ARCA", "NYSE", "BRKR"]
-sides = ["B", "S"]
+# 🔑 Your Polygon.io API Key
+API_KEY = "FNQ6kulx77olUBTnhrTfbaklew20b3vt"
 
-def generate_data():
-    data = []
-    for _ in range(10):
-        sym = random.choice(symbols)
-        side = random.choice(sides)
-        size = f"{round(random.uniform(1.5, 6.5), 3)}M"
-        pv = f"{round(random.uniform(1.0, 25.0), 2)}M"
-        mkt_time = datetime.now().strftime('%H:%M:%S.%f')[:-3]
-        src = random.choice(sources)
-        auc_price = round(random.uniform(2.0, 500.0), 2)
-        data.append([sym, side, size, pv, mkt_time, src, auc_price])
-    return pd.DataFrame(data, columns=["Sym", "Side", "Size", "PV", "MktTm", "Tp Src", "AucPx"])
+# Magnificent 7 + SPY
+symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "SPY"]
 
-st.title("📉 Time & Sales Viewer")
+# Fetch last trade data from Polygon
+def get_trade(symbol):
+    url = f"https://api.polygon.io/v2/last/trade/{symbol}?apiKey={API_KEY}"
+    r = requests.get(url)
+    if r.status_code == 200:
+        data = r.json()["results"]
+        return {
+            "Sym": symbol,
+            "Price": data.get("p"),
+            "Size": data.get("s"),
+            "Exchange": data.get("x"),
+            "Timestamp": datetime.fromtimestamp(data.get("t") / 1e9).strftime("%H:%M:%S.%f")[:-3]
+        }
+    else:
+        return {
+            "Sym": symbol,
+            "Price": "N/A",
+            "Size": "N/A",
+            "Exchange": "N/A",
+            "Timestamp": "Error"
+        }
+
+st.title("📡 Live Time & Sales: Magnificent 7 + SPY (Delayed)")
 
 placeholder = st.empty()
 
 while True:
-    df = generate_data()
+    rows = [get_trade(sym) for sym in symbols]
+    df = pd.DataFrame(rows)
     with placeholder.container():
-        st.table(df)
-    time.sleep(1)
+        st.dataframe(df)
+    time.sleep(5)  # update every 5 seconds
+
