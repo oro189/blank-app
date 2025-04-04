@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 # 🔑 Your Polygon.io API Key
-API_KEY = "FNQ6kulx77olUBTnhrTfbaklew20b3vt"
+API_KEY = 'LGp_mHRgBwQbipeZeqqDszcLdquVl_3P'
 
 # Magnificent 7 + SPY
 symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "SPY"]
@@ -42,4 +42,3 @@ while True:
     with placeholder.container():
         st.dataframe(df)
     time.sleep(5)  # update every 5 seconds
-
